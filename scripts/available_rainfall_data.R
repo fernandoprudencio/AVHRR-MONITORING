@@ -1,24 +1,26 @@
+#' @title availability of daily precipitation data
+#' @author Fernando Prudencio
+
 rm(list = ls())
 
-library(dplyr)
-library(reshape)
-library(ggplot2)
-library(sf)
-library(cluster)
-library(fpc)
-library(factoextra)
-library(ggpubr)
-library(adegraphics)
+#' LOAD PACKAGES
+library(tidyverse)
 
-data.pp <- read.csv('data/tables/BD_with_filterQA/BD_Pp.csv', sep = ';') %>% 
+#' READ DAILY RAINFALL DATA
+data.pp <- read.csv("data/tables/BD_with_filterQA/BD_Pp.csv", sep = ";") %>%
   mutate(date = date %>% as.Date(format = "%d/%m/%Y")) %>%
-  filter(date >= '1980-01-01' & '2013-12-31' >= date)
+  dplyr::filter(date >= "1980-01-01" & "2013-12-31" >= date) %>%
+  dplyr::select(-date)
 
 data.pp[data.pp == -99.9] <- NA
 
-df <- data.frame(
-  miss = ((is.na(data.pp) %>% colSums()) * 100 / nrow(data.pp))[-1],
-  COD = names(data.pp)[-1]
+#' AVAILABLE DATA
+df.pp <- tibble(
+  miss = colSums(is.na(data.pp)) * 100 / nrow(data.pp),
+  cod = names(data.pp)
 ) %>%
   mutate(id = 1:n()) %>%
   filter(miss <= 10)
+
+#' WRITE AVAILABLE RAINFALL DATA LIST
+save(df.pp, file = "data/rdata/available_rainfall_data.RData")
