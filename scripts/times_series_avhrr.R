@@ -10,7 +10,6 @@ library(raster)
 library(sf)
 library(rgee)
 library(tidyverse)
-library(mapview)
 
 #' INITIALIZE GEE
 ee_Initialize(drive = TRUE)
@@ -28,50 +27,26 @@ station <- st_read(
   layer = "weather_stations_HIST"
 ) %>%
   filter(cod %in% df.pp$cod) %>%
-  mutate(cod = as.character(cod)) %>%
-  filter(clus == 1)
+  mutate(cod = as.character(cod))
+#'   ee object
+ee_station <- station %>%
+  st_geometry() %>%
+  sf_as_ee()
 
-for (i in 1:3) { # npts(station)
-  #' ee VECTORIAL OBJECT
-  ee_station <- station[i, ] %>%
-    st_geometry() %>%
-    sf_as_ee()
+#' BUILD TYPE OF FILTER
+# bit1 <- ee$Number(2)$pow(1)$int()
 
-  #' BUILD TYPE OF FILTER
-  #bit1 <- ee$Number(2)$pow(1)$int()
+#' MASK NDVI DATASET
+ndvi_mak <- ee$ImageCollection("NOAA/CDR/AVHRR/NDVI/V5")$select("NDVI")
+# map(function(x) qaFilter(x, bit1))
 
-  #' MASK NDVI DATASET
-  ndvi_mak <- ee$ImageCollection("NOAA/CDR/AVHRR/NDVI/V5")$
-    filterDate("2019-01-01", "2019-12-31")$
-    select("NDVI")$
-    filter(ee$Filter$calendarRange(1, 12, field = "month"))#$
-    #map(function(x) qaFilter(x, bit1))
+#' EXTRACT TIME SERIES
+period <- seq(as.Date("1981-06-01"), as.Date("2019-12-01"), by = "1 month")
+ts <- sapply(period, FUN = ts.extract, images = ndvi_mak, points = ee_station)
 
-  #' EXTRACT TIME SERIES
-  ts <- ee_extract(ndvi_mak, ee_station, fun = ee$Reducer$mean()) %>%
-    as_tibble() %>%
-    gather() %>%
-    rename("date" = "key") %>%
-    mutate(
-      date = str_sub(date, 2, 9) %>% as.Date(format = "%Y%m%d")
-    )
-
-  #' BUILD TABLE TO WRITE TIME SERIES
-  if (i == 1) {
-    df.ts <- tibble(
-      date = seq(as.Date("1980-01-01"), as.Date("2019-12-31"), by = "1 day")
-    ) %>%
-      left_join(ts, by = "date")
-  } else {
-    df.ts <- df.ts %>% left_join(ts, by = "date")
-  }
-}
-
-x <- df.ts %>%
-  group_by(str_sub(date, 1, 7)) %>%
-  summarise_all(.funs = function(x) mean(x, na.rm = T))
-
-plot(df.ts$date, df.ts$value, type = "l", col = "black")
-lines(df.ts$date, df.ts$value.y, type = "l", col = "red")
-lines(df.ts$date, df.ts$value, type = "l", col = "blue")
-#
+#' BUILD TABLE TO WRITE TIME SERIES
+df <- t(as.data.frame(ts)) %>% as_tibble()
+#'   rename fields
+names(df) <- station$cod
+#'   save dataframe
+save(df, file = "data/rdata/ndvi_stations.RData")
