@@ -1,7 +1,12 @@
 data/*
+!data/rdata
+data/rdata/*
+!data/rdata/available_rainfall_data.RData
+!data/rdata/ndvi_stations.RData
+
+\info
+\exports
 .Rproj.user
 scripts/.Rhistory
 .Rhistory
-\exports
-\info
 .RData
