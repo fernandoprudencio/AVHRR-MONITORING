@@ -15,6 +15,7 @@ qaFilter <- function(img, bit) {
 }
 
 #' FUNCTION N2
+#'   Extract values from point vectors
 ts.extract <- function(date, images, points) {
   print(date)
   year <- str_sub(date, 1, 4) %>% as.numeric()
@@ -22,7 +23,7 @@ ts.extract <- function(date, images, points) {
   ndvi <- images$
     filter(ee$Filter$calendarRange(year, year, "year"))$
     filter(ee$Filter$calendarRange(month, month, "month"))$
-    median()
+    max()
 
   data <- ee_extract(ndvi, points, fun = ee$Reducer$mean(), scale = 5000)
 
