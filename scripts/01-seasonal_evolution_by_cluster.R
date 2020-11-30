@@ -1,11 +1,11 @@
-#' @title seasonal evolution by cluster
+#' @title seasonal evolution of NDVI by cluster
 #' @author Fernando Prudencio
 #'
 rm(list = ls())
 
 #' INSTALL PACKAGES
 pkg <- c(
-  "sf", "tidyverse"
+  "sf", "tidyverse", "Hmisc"
 )
 
 sapply(
@@ -27,7 +27,7 @@ library(Hmisc)
 load("data/rdata/ndvi_stations.RData")
 
 #' CONSTANTS
-k.cluster <- 10
+k.cluster <- 4
 k.years.omit = c(2005, 2010, 2016)
 
 #' SELECT STATION BY CLUSTER
@@ -54,6 +54,7 @@ normal.ndvi <-
   group_by(date = str_sub(date, 6, 7)) %>%
   summarise(ndvi = mean(ndvi, na.rm = T))
 
+plot(ndvi, type = "l")
 plot(normal.ndvi$ndvi, type = "l")
 # barplot(normal.ndvi$ndvi, type = "l")
 
