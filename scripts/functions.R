@@ -15,7 +15,7 @@ qaFilter <- function(img, bit) {
 }
 
 #' FUNCTION N2
-#'   Extract values from point vectors
+#'   Extract values from point vectors GEE
 ts.extract <- function(date, images, points) {
   print(date)
   year <- str_sub(date, 1, 4) %>% as.numeric()
