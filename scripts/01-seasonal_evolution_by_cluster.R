@@ -24,10 +24,11 @@ library(tidyverse)
 library(Hmisc)
 
 #' LOAD NDVI VALUES
-load("data/rdata/ndvi_stations.RData")
+load("data/rdata/ndvi_stations_AVHRR.RData")
 
 #' CONSTANTS
-k.cluster <- 10
+k.cluster <- c(10, 12)
+k.cluster <- 12
 k.years.omit = c(2005, 2010, 2016)
 
 #' SELECT STATION BY CLUSTER
@@ -36,7 +37,7 @@ sf.station <- st_read(
   layer = "weather_stations_HIST"
 ) %>%
   mutate(cod = as.character(cod)) %>%
-  dplyr::filter(clus == k.cluster)
+  dplyr::filter(clus %in% k.cluster)
 
 #' SELECT NDVI VALUES BY STATIONS
 ndvi <-
@@ -50,18 +51,26 @@ ndvi <-
   )
 
 normal.ndvi <-
-  dplyr::filter(ndvi, date >= "2019-01-01") %>%#str_sub(date, 1, 4) %nin% k.years.omit
+  dplyr::filter(ndvi, str_sub(date, 1, 4) %nin% k.years.omit) %>%#str_sub(date, 1, 4) %nin% k.years.omit
   group_by(date = str_sub(date, 6, 7)) %>%
   summarise(ndvi = mean(ndvi, na.rm = T))
-
-plot(normal.ndvi$ndvi, type = "l")
-# barplot(normal.ndvi$ndvi, type = "l")
-
 
 dry.ndvi <-
   dplyr::filter(ndvi, str_sub(date, 1, 4) %in% k.years.omit) %>%
   group_by(date = str_sub(date, 6, 7)) %>%
   summarise(ndvi = mean(ndvi, na.rm = T))
 
-dry.ndvi <-
+dry.2005 <-
+  dplyr::filter(ndvi, str_sub(date, 1, 4) == 2005)
+dry.2010 <-
+  dplyr::filter(ndvi, str_sub(date, 1, 4) == 2010)
+dry.2016 <-
   dplyr::filter(ndvi, str_sub(date, 1, 4) == 2016)
+
+
+  plot(dry.2005$ndvi, type = "l", col = "red")
+  lines(normal.ndvi$ndvi, type = "l", col = "black")
+  # lines(dry.ndvi$ndvi, type = "l", col = "red")
+  lines(dry.2010$ndvi, type = "l", col = "blue")
+  lines(dry.2016$ndvi, type = "l", col = "green")
+  
