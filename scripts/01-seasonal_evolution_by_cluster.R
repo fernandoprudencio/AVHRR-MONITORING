@@ -1,11 +1,11 @@
-#' @title seasonal evolution by cluster
+#' @title seasonal evolution of NDVI by cluster
 #' @author Fernando Prudencio
 #'
 rm(list = ls())
 
 #' INSTALL PACKAGES
 pkg <- c(
-  "sf", "tidyverse"
+  "sf", "tidyverse", "Hmisc"
 )
 
 sapply(
