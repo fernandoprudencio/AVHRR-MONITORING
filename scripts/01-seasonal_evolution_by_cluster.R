@@ -4,9 +4,7 @@
 rm(list = ls())
 
 #' INSTALL PACKAGES
-pkg <- c(
-  "sf", "tidyverse", "Hmisc"
-)
+pkg <- c("sf", "tidyverse", "Hmisc", "zoo", "magick")
 
 sapply(
   pkg,
@@ -23,13 +21,14 @@ library(sf)
 library(tidyverse)
 library(Hmisc)
 library(zoo)
+library(magick)
 
 #' 1| LOAD NDVI VALUES
 load("data/rdata/ndvi_stations_MODIS.RData")
 
 #' 2| CONSTANTS
-k.cluster <- c(10, 12)
-k.years.omit <- c(2005, 2010)
+k.cluster <- c(6)
+# k.years.omit <- c(2005, 2010)
 
 #' 3| SELECT STATION BY CLUSTER
 sf.station <- st_read(
@@ -198,14 +197,16 @@ df <-
 
 #'   6.2| plot graph
 #'     6.2.1| homogenize the primary and secondary axis
-ylim.prim <- c(min(df$pp.value, na.rm = T), max(df$pp.value, na.rm = T))
-ylim.sec <- c(min(df$ndvi.value, na.rm = T), max(df$ndvi.value, na.rm = T))
+# ylim.prim <- c(min(df$pp.value, na.rm = T), max(df$pp.value, na.rm = T))
+ylim.prim <- c(0, 80)
+# ylim.sec <- c(min(df$ndvi.value, na.rm = T), max(df$ndvi.value, na.rm = T))
+ylim.sec <- c(.1, .8)
 #'     6.2.2| conversion coefficient"
 n <- diff(ylim.prim) / diff(ylim.sec)
 m <- ylim.prim[1] - n * (ylim.sec[1])
-
-ggplot(df) +
-  labs(y = "[mm]") +
+#'     6.2.3| plot
+plt <- ggplot(df) +
+  labs(y = "[mm]", subtitle = "Region: Altiplano") +
   geom_bar(
     aes(x = date, y = pp.value, fill = pp.type),
     position = "identity", stat = "identity", alpha = 0.6,
@@ -216,55 +217,60 @@ ggplot(df) +
       rgb(39, 107, 255, maxColorValue = 255),
       rgb(207, 215, 247, maxColorValue = 255)
     ),
-    labels = c("normal", "dry")
+    labels = c("normal\nyears\nrainfall", "dry\nyears\nrainfall")
   ) +
   geom_line(
     aes(
       x = date,
       y = m + ndvi.value * n,
       linetype = ndvi.type,
-      color = ndvi.type,
-      size = ndvi.type
-    )
+      color = ndvi.type
+    ), size = .9
   ) +
-  # geom_point(aes(shape = type, color = type), size = 2) +
+  geom_point(
+    aes(
+      x = date, y = m + ndvi.value * n, color = ndvi.type
+    ),
+    size = 1.3
+  ) +
   scale_linetype_manual(
-    values = c("solid", "solid"), labels = c("normal", "dry")
+    values = c("solid", "solid"),
+    labels = c("normal\nyears\nndvi", "dry\nyears\nndvi")
   ) +
   scale_color_manual(
     values = c(
-      rgb(237, 28, 36, maxColorValue = 255),
-      rgb(14, 149, 7, maxColorValue = 255)
+      rgb(14, 149, 7, maxColorValue = 255),
+      rgb(131, 201, 128, maxColorValue = 255)
     ),
-    labels = c("normal", "dry")
-  ) +
-  scale_size_manual(
-    values = c(1, 1), labels = c("normal", "dry")
+    labels = c("normal\nyears\nndvi", "dry\nyears\nndvi")
   ) +
   scale_x_date(
     date_breaks = "1 month", date_labels = "%b",
-    expand = expansion(mult = c(.01, .01))
+    expand = expansion(mult = c(.008, .002))
   ) +
   scale_y_continuous(
-    sec.axis = sec_axis(~ (. - m) / n, name = "index"),
+    sec.axis = sec_axis(
+      ~ (. - m) / n, name = "index", breaks = seq(.1, .8, .1)
+    ),
     breaks = seq(0, 80, 10),
     limits = c(0, 80),
     expand = expansion(mult = c(.02, 0))
   ) +
   theme_bw() +
   theme(
-    legend.background = element_rect(fill = "white", color = "black"),
+    legend.background = element_rect(fill = "white", color = "black", size = 0),
     legend.margin = margin(3, 7, 7, 7),
-    # legend.key.size = unit(.8, "cm"),
-    legend.key.width = unit(1.6, "cm"),
-    legend.key.height = unit(1.1, "cm"),
-    legend.position = c(0.77, 0.78),
+    legend.key.size = unit(.4, "cm"),
+    # legend.key.width = unit(.5, "cm"),
+    # legend.key.height = unit(.3, "cm"),
+    legend.spacing.y = unit(.1, "cm"),
+    legend.position = c(.08, .76),
     legend.title = element_blank(),
-    legend.text = element_text(size = 15, family = "Source Sans Pro"),
-    plot.title = element_text(size = 15, hjust = .5, family = "Source Sans Pro"),
+    legend.text = element_text(size = 6, family = "Source Sans Pro"),
+    plot.subtitle = element_text(size = 12, family = "Source Sans Pro"),
     axis.text.x = element_text(
       size = 12, colour = "black", family = "Source Sans Pro",
-      face = "bold", angle = 0, vjust = .6
+      face = "bold", angle = 0, vjust = .6, hjust = -.27
     ),
     axis.text.y = element_text(
       size = 13, face = "bold", family = "Source Sans Pro", color = "black"
@@ -282,3 +288,18 @@ ggplot(df) +
       size = .8, color = "black"
     )
   )
+#'     6.2.4| plot
+name <- "exports/rainfall_vs_NDVI_northern_Andes.png"
+name <- "exports/rainfall_vs_NDVI_central_Andes.png"
+name <- "exports/rainfall_vs_NDVI_southern_Andes.png"
+name <- "exports/rainfall_vs_NDVI_Altiplano.png"
+ggsave(
+  plot = plt, name, width = 16, height = 12, units = "cm", dpi = 1000
+)
+#'     6.2.5| trim figure
+img <- magick::image_read(name, strip = TRUE) %>%
+  image_trim() %>%
+  image_border("white", "50x50")
+
+#'     6.2.6| save figure
+image_write(img, path = name, format = "png")
