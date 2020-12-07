@@ -7,9 +7,7 @@
 rm(list = ls())
 
 #' INSTALL PACKAGES
-pkg <- c(
-  "sf", "griExtra", "tidyverse", "ggthemes", "grid", "gridExtra"
-)
+pkg <- c("sf", "tidyverse", "zoo")
 
 sapply(
   pkg,
@@ -22,6 +20,7 @@ sapply(
 )
 
 library(tidyverse)
+library(sf)
 library(zoo)
 
 #' 1| LOAD DATA
