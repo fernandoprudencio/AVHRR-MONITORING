@@ -12,7 +12,7 @@ rm(list = ls())
 
 #' INSTALL PACKAGES
 pkg <- c(
-  "sf", "griExtra", "tidyverse", "ggthemes", "grid", "gridExtra"
+  "sf", "gridExtra", "tidyverse", "ggthemes", "grid", "gridExtra"
 )
 
 sapply(
@@ -34,10 +34,10 @@ library(tidyverse)
 library(scales)
 
 #' LOAD DATA
-load("data/rdata/ndvi_stations.RData")
+load("data/rdata/ndvi_stations_AVHRR.RData")
 
 #' CHANGE TO ENGLISH LANGUAGE
-Sys.setlocale(category = "LC_ALL", locale = "english")
+# Sys.setlocale(category = "LC_ALL", locale = "english")
 
 #' TYPE CLUSTER NUMBER
 cluster <- 16
