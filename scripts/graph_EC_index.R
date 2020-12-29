@@ -67,6 +67,18 @@ plt <- ggplot(table) +
   geom_hline(
     yintercept = 0, color = "black", size = .3
   ) +
+  geom_hline(
+    yintercept = 1, linetype = "dashed", color = "black", size = .3
+  ) +
+  geom_hline(
+    yintercept = -1, linetype = "dashed", color = "black", size = .3
+  ) +
+  geom_hline(
+    yintercept = 2, linetype = "longdash", color = "black", size = .3
+  ) +
+  geom_hline(
+    yintercept = -2, linetype = "longdash", color = "black", size = .3
+  ) +
   scale_x_date(
     limits = c(as.Date("2002-01-01"), as.Date("2018-12-01")),
     date_labels = "%y",
@@ -106,7 +118,7 @@ plt <- ggplot(table) +
     panel.grid = element_blank(),
     plot.tag = element_text(size = 25, family = "Source Sans Pro")
   )
-plt
+
 # SAVE PLOT
 ggsave(
   plt, filename = "exports/EC-index.png",
