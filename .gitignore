@@ -4,6 +4,7 @@ data/rdata/*
 !data/rdata/available_rainfall_data.RData
 !data/rdata/ndvi_stations_AVHRR.RData
 !data/rdata/ndvi_stations_MODIS.RData
+!data/rdata/modis_date.RData
 
 \info
 \exports
