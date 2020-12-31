@@ -31,3 +31,54 @@ ts.extract <- function(date, images, points) {
 
   return(data)
 }
+
+#' FUNCTION N2
+#'   Calculate anomalies
+fun.anom <- function(cluster, data) {
+  #' 1| Select stations
+  sf.station <- read_sf(
+    dsn = "data/vector/senamhi_weather_stations.gpkg",
+    layer = "weather_stations_HIST"
+  ) %>%
+    mutate(cod = as.character(cod)) %>%
+    dplyr::filter(clus %in% cluster)
+  
+  #' 2| Calculate monthly NDVI
+  data.monthly <-
+    tibble(
+      ndvi = dplyr::select(data, sf.station$cod) %>%
+        apply(1, FUN = function(x) mean(x, na.rm = T))
+    ) %>%
+    mutate(
+      date = data$date,
+      ndvi = ndvi * .0001
+    ) %>%
+    dplyr::filter(date <= "2018-12-31") %>%
+    group_by(date = str_sub(date, 1, 7)) %>%
+    summarise_all(.funs = function(x) mean(x, na.rm = T)) %>%
+    mutate(
+      date = as.Date(sprintf("%1$s-01", date)),
+      month = str_sub(date, 6, 7)
+    )
+  
+  #' 3| calculate climatology
+  data.clim <-
+    data.monthly %>%
+    # dplyr::filter(
+    #   !(
+    #     (date >= "2005-09-01" & date <= "2006-08-31") |
+    #       (date >= "2010-09-01" & date <= "2011-08-31")
+    #   )
+    # ) %>%
+    group_by(date = str_sub(date, 6, 7)) %>%
+    summarise(data.clim = mean(ndvi, na.rm = T)) %>%
+    rename(month = date)
+  
+  #' 4| calculate anomalies
+  data.anom <-
+    left_join(data.monthly, data.clim, "month") %>%
+    mutate(data.anom = ndvi - data.clim)
+  
+  #' RETURN
+  return(data.anom$data.anom)
+}
