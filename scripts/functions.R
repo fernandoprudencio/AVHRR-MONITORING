@@ -32,7 +32,7 @@ ts.extract <- function(date, images, points) {
   return(data)
 }
 
-#' FUNCTION N2
+#' FUNCTION N3
 #'   Calculate anomalies
 fun.anom <- function(cluster, data) {
   #' 1| Select stations
